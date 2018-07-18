@@ -6,31 +6,16 @@
 # ======================================================================================================================
 from click.testing import CliRunner
 from magic_marker import cli
+import re
 
 
-def test_magic_marker_happy_path(tmpdir_factory):
-    unmarked_test = """
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+def test_magic_marker_happy_path(tmpdir_factory, one_test_unmarked, uuid_patch, mocker):
+    """Test the happy path"""
 
-# ======================================================================================================================
-# Imports
-# ======================================================================================================================
-from click.testing import CliRunner
-import tempfile
-import json
-
-
-def test_i_am_not_marked():
-    pass
-
-"""
-
+    mocker.patch('uuid.uuid1', return_value=uuid_patch)
     file_path = tmpdir_factory.mktemp('test').join('test_this_is_a_test.py').strpath
     with open(file_path, 'w') as f:
-        f.write(unmarked_test)
-    with open(file_path, 'r') as f:
-        original_data = f.readlines()
+        f.write(one_test_unmarked.original)
 
     runner = CliRunner()
     cli_arguments = [file_path, 'test_id']
@@ -39,39 +24,17 @@ def test_i_am_not_marked():
     assert result.exit_code == 0
     assert "test_this_is_a_test.py : 1 test marked with UUID" in result.output
     with open(file_path, 'r') as f:
-        observed_data = f.readlines()
-    change = list(set(observed_data) - set(original_data))
-    assert len(change) == 1
-    assert "@pytest.mark.test_id(" in change[0]
+        observed_data = f.read()
+    assert observed_data == one_test_unmarked.expected
 
 
-def test_magic_marker_happy_path_two_tests(tmpdir_factory):
-    unmarked_test = """
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+def test_magic_marker_happy_path_two_tests(tmpdir_factory, two_tests_unmarked, uuid_patch, mocker):
+    """Test marking two tests in the same file"""
 
-# ======================================================================================================================
-# Imports
-# ======================================================================================================================
-from click.testing import CliRunner
-import tempfile
-import json
-
-
-def test_i_am_not_marked():
-    pass
-
-
-def test_i_am_also_not_marked():
-    pass
-
-"""
-
+    mocker.patch('uuid.uuid1', return_value=uuid_patch)
     file_path = tmpdir_factory.mktemp('test').join('test_this_is_a_test.py').strpath
     with open(file_path, 'w') as f:
-        f.write(unmarked_test)
-    with open(file_path, 'r') as f:
-        original_data = f.readlines()
+        f.write(two_tests_unmarked.original)
 
     runner = CliRunner()
     cli_arguments = [file_path, 'test_id']
@@ -80,39 +43,16 @@ def test_i_am_also_not_marked():
     assert result.exit_code == 0
     assert "test_this_is_a_test.py : 2 tests marked with UUID" in result.output
     with open(file_path, 'r') as f:
-        observed_data = f.readlines()
-    change = list(set(observed_data) - set(original_data))
-    assert len(change) == 2
-    assert "@pytest.mark.test_id(" in change[0]
+        observed_data = f.read()
+    assert observed_data == two_tests_unmarked.expected
 
 
-def test_magic_marker_no_changes_necessary(tmpdir_factory):
-    unmarked_test = """
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-# ======================================================================================================================
-# Imports
-# ======================================================================================================================
-from click.testing import CliRunner
-import tempfile
-import json
-
-@pytest.mark.test_id('b360c12d-0d47-4cfc-9f9e-5d86c315b1e4')
-def test_i_am_not_marked():
-    pass
-
-@pytest.mark.test_id('b360c12d-0d47-4cfc-9f9e-5d86c315b1e4')
-def test_i_am_also_not_marked():
-    pass
-
-"""
+def test_magic_marker_no_changes_necessary(tmpdir_factory, none_unmarked):
+    """Test when there are no changes expected"""
 
     file_path = tmpdir_factory.mktemp('test').join('test_this_is_a_test.py').strpath
     with open(file_path, 'w') as f:
-        f.write(unmarked_test)
-    with open(file_path, 'r') as f:
-        original_data = f.readlines()
+        f.write(none_unmarked.original)
 
     runner = CliRunner()
     cli_arguments = [file_path, 'test_id']
@@ -121,40 +61,17 @@ def test_i_am_also_not_marked():
     assert result.exit_code == 0
     assert "No changes made" in result.output
     with open(file_path, 'r') as f:
-        observed_data = f.readlines()
-    change = list(set(observed_data) - set(original_data))
-    assert len(change) == 0
+        observed_data = f.read()
+    assert observed_data == none_unmarked.expected
 
 
-def test_magic_marker_mark_one(tmpdir_factory):
-    unmarked_test = """
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+def test_magic_marker_mark_one(tmpdir_factory, one_of_two_unmarked, uuid_patch, mocker):
+    """Test only marking one of two tests"""
 
-# ======================================================================================================================
-# Imports
-# ======================================================================================================================
-from click.testing import CliRunner
-import tempfile
-import json
-
-@pytest.mark.foo('bar')
-@pytest.mark.bar('foo')
-def test_i_am_not_marked():
-    pass
-
-@pytest.mark.test_id('b360c12d-0d47-4cfc-9f9e-5d86c315b1e4')
-@pytest.mark.foo('baz')
-def test_i_am_also_not_marked():
-    pass
-
-"""
-
+    mocker.patch('uuid.uuid1', return_value=uuid_patch)
     file_path = tmpdir_factory.mktemp('test').join('test_this_is_a_test.py').strpath
     with open(file_path, 'w') as f:
-        f.write(unmarked_test)
-    with open(file_path, 'r') as f:
-        original_data = f.readlines()
+        f.write(one_of_two_unmarked.original)
 
     runner = CliRunner()
     cli_arguments = [file_path, 'test_id']
@@ -163,42 +80,17 @@ def test_i_am_also_not_marked():
     assert result.exit_code == 0
     assert "test_this_is_a_test.py : 1 test marked with UUID" in result.output
     with open(file_path, 'r') as f:
-        observed_data = f.readlines()
-    change = list(set(observed_data) - set(original_data))
-    assert len(change) == 1
+        observed_data = f.read()
+    assert observed_data == one_of_two_unmarked.expected
 
 
-def test_magic_marker_with_whitespace(tmpdir_factory):
-    unmarked_test = """
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+def test_magic_marker_with_whitespace(tmpdir_factory, inside_a_class, uuid_patch, mocker):
+    """Test when a test is defined inside a class"""
 
-# ======================================================================================================================
-# Imports
-# ======================================================================================================================
-from click.testing import CliRunner
-import tempfile
-import json
-
-class TestFooBar(object):
-
-    @pytest.mark.foo('bar')
-    @pytest.mark.bar('foo')
-    def test_i_am_not_marked():
-        pass
-
-    @pytest.mark.test_id('b360c12d-0d47-4cfc-9f9e-5d86c315b1e4')
-    @pytest.mark.foo('baz')
-    def test_i_am_also_not_marked():
-        pass
-
-"""
-
+    mocker.patch('uuid.uuid1', return_value=uuid_patch)
     file_path = tmpdir_factory.mktemp('test').join('test_this_is_a_test.py').strpath
     with open(file_path, 'w') as f:
-        f.write(unmarked_test)
-    with open(file_path, 'r') as f:
-        original_data = f.readlines()
+        f.write(inside_a_class.original)
 
     runner = CliRunner()
     cli_arguments = [file_path, 'test_id']
@@ -207,7 +99,22 @@ class TestFooBar(object):
     assert result.exit_code == 0
     assert "test_this_is_a_test.py : 1 test marked with UUID" in result.output
     with open(file_path, 'r') as f:
-        observed_data = f.readlines()
-    change = list(set(observed_data) - set(original_data))
-    assert len(change) == 1
-    assert change[0][0:4] == '    '
+        observed_data = f.read()
+    assert observed_data == inside_a_class.expected
+
+
+def test_backup(tmpdir_factory, inside_a_class):
+    """Test that a target is copied to a backup location"""
+    file_path = tmpdir_factory.mktemp('test').join('test_this_is_a_test.py').strpath
+    with open(file_path, 'w') as f:
+        f.write(inside_a_class.original)
+
+    runner = CliRunner()
+    cli_arguments = [file_path, 'test_id']
+    result = runner.invoke(cli.main, args=cli_arguments)
+    assert result.exit_code == 0
+    backup_regex = re.compile('^A backup was created : (.*)$', re.MULTILINE)
+    path = backup_regex.search(str(result.output)).group(1)
+    with open(path, 'r') as f:
+        observed_data = f.read()
+    assert observed_data == inside_a_class.original

@@ -7,7 +7,7 @@ magic-marker
         :target: https://travis-ci.org/rcbops/magic-marker
 
 
-Parse JUnitXML and upload test results to qTest Manager.
+Mark pytest test cases with UUIDs.
 
 Quick Start Guide
 -----------------

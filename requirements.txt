@@ -9,3 +9,4 @@ flake8-json
 flake8-pytest-mark
 ipython
 six
+pytest-mock

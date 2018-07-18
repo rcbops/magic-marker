@@ -4,4 +4,4 @@
 
 __author__ = """rcbops"""
 __email__ = 'rpc-automation@rackspace.com'
-__version__ = '0.0.1'
+__version__ = '0.1.0'

@@ -11,17 +11,17 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', 'flake8-pytest-mark', 'flake8', 'flake8-json', 'six']
+requirements = ['Click>=6.0', 'flake8-pytest-mark<1.0.0', 'flake8', 'flake8-json', 'six']
 packages = ['magic_marker']
 entry_points = {
     'console_scripts': [
-        'magic_marker=magic_marker.cli:main',
+        'magic-marker=magic_marker.cli:main',
     ],
 }
 
 setup(
     name='magic-marker',
-    version='0.0.1',
+    version='0.1.0',
     author="rcbops",
     author_email='rpc-automation@rackspace.com',
     maintainer='rcbops',

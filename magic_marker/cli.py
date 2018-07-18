@@ -26,9 +26,10 @@ def main(test_path, pytest_mark_name):
     """
 
     try:
-        mm = MagicMarker(directory=test_path, mark=pytest_mark_name)
-        message = mm.run_flake8_and_mark()
+        mm = MagicMarker(pytest_mark_name)
+        message = mm.run_flake8_and_mark(test_path)
         click.echo(click.style("\nSuccess!", fg='green'))
+        click.echo(click.style("\nA backup was created : {}".format(mm.backup_dir), fg='green'))
         click.echo(click.style(message, fg='green'))
     except RuntimeError as e:
         click.echo(click.style(str(e), fg='red'))
