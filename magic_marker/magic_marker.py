@@ -7,10 +7,8 @@
 from __future__ import absolute_import
 from flake8.main.cli import main as flake8_main
 from contextlib import contextmanager
-from os import fdopen, remove
 import sys
 import six
-import tempfile
 import json
 import uuid
 import re
@@ -44,22 +42,12 @@ class MagicMarker(object):
         Returns:
             Str: the message stating what was performed
         """
-        flake8_config = """
-[flake8]
-pytest_mark1 = name={}
-               value_match=uuid
-            """.format(self._mark)
-
-        file_handle, path = tempfile.mkstemp(text=True)
-
-        with fdopen(file_handle, 'w') as config:
-            config.write(flake8_config)
 
         args = [
             'flake8',
             self._directory,
-            "--config={}".format(path),
             "--format=json",
+            "--pytest-mark1=name={},value_match=uuid".format(self._mark),
             "--select=M501"  # only covers case of no mark present
         ]
 
@@ -68,7 +56,7 @@ pytest_mark1 = name={}
                 flake8_main()
             except SystemExit:
                 pass  # This is raised by flake8
-        remove(path)
+
         full_output = json.loads(stdout.getvalue())
         return self.fix_it(full_output)
 
@@ -128,7 +116,8 @@ pytest_mark1 = name={}
         """
         return "@pytest.mark.{}(\"{}\")\n".format(self._mark, str(uuid.uuid1()))
 
-    def _match_indent(self, def_string, target_line):
+    @staticmethod
+    def _match_indent(def_string, target_line):
         """Match the indent of the original string
 
         Args:
