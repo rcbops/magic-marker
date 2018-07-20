@@ -30,25 +30,25 @@ class MagicMarker(object):
         """
         self._mark = mark
         dir_name = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10))
-        self._backup_dir = os.path.join(tempfile.gettempdir(), dir_name)
+        self._backup_path = os.path.join(tempfile.gettempdir(), dir_name)
 
     @property
-    def backup_dir(self):
-        return self._backup_dir
+    def backup_path(self):
+        return self._backup_path
 
-    def run_flake8_and_mark(self, directory):
+    def run_flake8_and_mark(self, path):
         """Run flak8 and edit and fix errors
 
         Args:
-            directory (str): The directory to target for the fix
+            path (str): The path to target for the fix
 
         Returns:
-            Str: the message stating what was performed
+            str: the message stating what was performed
         """
 
         args = [
             'flake8',
-            directory,
+            path,
             "--format=json",
             "--pytest-mark1=name={},value_match=uuid".format(self._mark),
             "--select=M501"  # only covers case of no mark present
@@ -61,23 +61,23 @@ class MagicMarker(object):
                 pass  # This is raised by flake8
 
         flake8_output = json.loads(stdout.getvalue())
-        self._backup_whole_dir(directory)
+        self._backup_whole_path(path)
         return self.fix_it(flake8_output)
 
-    def _backup_whole_dir(self, directory):
+    def _backup_whole_path(self, path):
         """Backup the entire target
 
         Args:
-            directory (str): the path to copy
+            path (str): the path to copy
         """
         try:
-            shutil.copytree(directory, self._backup_dir)
+            shutil.copytree(path, self._backup_path)
         except OSError as exc:  # python >2.5
             if exc.errno == errno.ENOTDIR:
                 # its a single file
-                shutil.copy(directory, self.backup_dir)
+                shutil.copy(path, self.backup_path)
             else:
-                raise RuntimeError("Magic Marker was not able to backup the target {}".format(directory))
+                raise RuntimeError("Magic Marker was not able to backup the target {}".format(path))
 
     def fix_it(self, flake8_output):
         """Perform the fix
@@ -146,8 +146,7 @@ class MagicMarker(object):
         Returns:
             str : The new string updated with correct whitespace
         """
-        regex = re.compile('(^\s*)')
-        whitespace = re.match(regex, def_string).group(1)
+        whitespace = re.match('(^\s*)', def_string).group(1)
         if whitespace:
             target_line = whitespace + target_line
         return target_line
@@ -159,7 +158,7 @@ class MagicMarker(object):
         Args:
             new_argv (list): the desired argv
 
-        Yield:
+        Yields:
             None
         """
         orig = sys.argv
@@ -175,7 +174,7 @@ class MagicMarker(object):
         Args:
             stream_name (str): The name of the stream to capture
 
-        Yield:
+        Yields:
             StringIO
 
         Note: This function and the following ``captured_std*`` are copied
