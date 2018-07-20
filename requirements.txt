@@ -1,0 +1,12 @@
+-c constraints.txt
+click
+bumpversion
+flake8
+tox
+pytest
+twine
+flake8-json
+flake8-pytest-mark
+ipython
+six
+pytest-mock
