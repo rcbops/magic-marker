@@ -6,7 +6,7 @@ tox
 pytest
 twine
 flake8-json
-flake8-pytest-mark
+-e git://github.com/ryan-rs/flake8-pytest-mark.git@41458005de4fb4cc1c4a803d9eca2fcfac9d55f2#egg=flake8-pytest-mark
 ipython
 six
 pytest-mock
