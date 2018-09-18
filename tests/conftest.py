@@ -255,31 +255,23 @@ def stepped_class_workflow(tmpdir_factory):
 # ======================================================================================================================
 # Imports
 # ======================================================================================================================
-from click.testing import CliRunner
-import tempfile
-import json
+
 
 class TestFooBar(object):
 
-    @pytest.mark.foo('bar')
-    @pytest.mark.bar('foo')
     def test_i_am_not_marked():
         pass
 
-    @pytest.mark.foo('baz')
     def test_i_am_also_not_marked():
         pass
 
 
 class TestBaz(object):
 
-    @pytest.mark.foo('bar')
-    @pytest.mark.bar('foo')
-    def test_i_am_not_marked():
+    def test_i_am_not_marked_two():
         pass
 
-    @pytest.mark.foo('baz')
-    def test_i_am_also_not_marked():
+    def test_i_am_also_not_marked_two():
         pass
 
 """
@@ -291,20 +283,16 @@ class TestBaz(object):
 # ======================================================================================================================
 # Imports
 # ======================================================================================================================
-from click.testing import CliRunner
-import tempfile
-import json
+import pytest
+
 
 @pytest.mark.test_id('b360c12d-0d47-4cfc-9f9e-5d86c315b1e4')
 @pytest.mark.test_case_with_steps()
 class TestFooBar(object):
 
-    @pytest.mark.foo('bar')
-    @pytest.mark.bar('foo')
     def test_i_am_not_marked():
         pass
 
-    @pytest.mark.foo('baz')
     def test_i_am_also_not_marked():
         pass
 
@@ -313,13 +301,10 @@ class TestFooBar(object):
 @pytest.mark.test_case_with_steps()
 class TestBaz(object):
 
-    @pytest.mark.foo('bar')
-    @pytest.mark.bar('foo')
-    def test_i_am_not_marked():
+    def test_i_am_not_marked_two():
         pass
 
-    @pytest.mark.foo('baz')
-    def test_i_am_also_not_marked():
+    def test_i_am_also_not_marked_two():
         pass
 
 """.format(uuid_patch())

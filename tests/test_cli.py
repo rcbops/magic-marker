@@ -6,7 +6,10 @@
 # ======================================================================================================================
 from click.testing import CliRunner
 from magic_marker import cli
+from tests.helpers.ast_helpers import ClassDecoratorRetriever
+from tests.helpers.ast_helpers import FunctionDecoratorRetriever
 import re
+import ast
 
 
 def test_magic_marker_happy_path(one_test_unmarked, original_behavior_config, uuid_patch, mocker):
@@ -103,10 +106,13 @@ def test_backup(inside_a_class, original_behavior_config):
 
 def test_stepped_class_workflow(stepped_class_workflow, stepped_class_config, mocker, uuid_patch):
     """Test out the new workflow"""
-    
-    # patch creation of possible marks, we are only using 3 marks so not going to create all 50
+
+    # patch creation of possible marks, we are only using 3
+    # marks so not going to create all 50
     patch = {'pytest_mark1': {}, 'pytest_mark2': {}, 'pytest_mark3': {}, 'pytest_mark4': {}}
     mocker.patch("flake8_pytest_mark.MarkChecker.pytest_marks", new=patch)
+    cdr = ClassDecoratorRetriever()
+    fdr = FunctionDecoratorRetriever()
 
     mocker.patch('uuid.uuid1', return_value=uuid_patch)
     runner = CliRunner()
@@ -115,4 +121,12 @@ def test_stepped_class_workflow(stepped_class_workflow, stepped_class_config, mo
     assert result.exit_code == 0
     with open(stepped_class_workflow.path, 'r') as f:
         observed_data = f.read()
-    assert observed_data == stepped_class_workflow.expected
+    node = ast.parse(observed_data, mode='exec')
+
+    class_decorators = cdr.visit(node)
+    function_decorators = fdr.visit(node)
+
+    assert '@pytest.mark.test_case_with_steps()' in class_decorators['TestFooBar']
+    assert "@pytest.mark.test_id('{}')".format(uuid_patch) in class_decorators['TestFooBar']
+    for funct, decorators in list(function_decorators.items()):  # there should be no @pytest.mark on any function
+        assert not decorators
