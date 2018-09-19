@@ -55,10 +55,6 @@ class MagicMarker(object):
                     opts[key][val[0]] = val[1]
         self.options = opts
 
-    def find_fixable(self):
-        """find the configured marks that are fixable"""
-        pass
-
     def run_flake8_and_mark(self, path, config):
         """Run flak8 and edit and fix errors
 
@@ -70,7 +66,7 @@ class MagicMarker(object):
             str: the message stating what was performed
         """
 
-        self.find_options(config)  # TODO need to parse config and format args below
+        self.find_options(config)
         args = [
             'flake8',
             path,
@@ -140,9 +136,6 @@ class MagicMarker(object):
             data = f.readlines()
 
         fixes_required.sort(key=lambda x: x['line_number'])
-
-        # TODO filter the fixes required and assign a fix mechanism
-        # we need a union of configs and errors
 
         fixes_required.reverse()  # work from the bottom of the file up
         for fix in fixes_required:
