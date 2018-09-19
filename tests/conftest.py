@@ -246,6 +246,122 @@ class TestFooBar(object):
                                name='inside_a_class.py')
 
 
+@pytest.fixture()
+def stepped_class_workflow(tmpdir_factory):
+    original = """
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# ======================================================================================================================
+# Imports
+# ======================================================================================================================
+
+
+class TestFooBar(object):
+
+    def test_i_am_not_marked():
+        pass
+
+    def test_i_am_also_not_marked():
+        pass
+
+
+class TestBaz(object):
+
+    def test_i_am_not_marked_two():
+        pass
+
+    def test_i_am_also_not_marked_two():
+        pass
+
+"""
+
+    expected = """
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# ======================================================================================================================
+# Imports
+# ======================================================================================================================
+import pytest
+
+
+@pytest.mark.test_id('b360c12d-0d47-4cfc-9f9e-5d86c315b1e4')
+@pytest.mark.test_case_with_steps()
+class TestFooBar(object):
+
+    def test_i_am_not_marked():
+        pass
+
+    def test_i_am_also_not_marked():
+        pass
+
+
+@pytest.mark.test_id('b360c12d-0d47-4cfc-9f9e-5d86c315b1e4')
+@pytest.mark.test_case_with_steps()
+class TestBaz(object):
+
+    def test_i_am_not_marked_two():
+        pass
+
+    def test_i_am_also_not_marked_two():
+        pass
+
+""".format(uuid_patch())
+    return OriginalAndExpected(original=original,
+                               expected=expected,
+                               tmpdir_factory=tmpdir_factory,
+                               name='stepped_class_workflow.py')
+
+
+@pytest.fixture()
+def stepped_class_config(tmpdir_factory):
+    config = """
+[flake8]
+ignore = E501
+pytest_mark1 = name=test_id,
+               value_match=uuid,
+               enforce_unique_value=true,
+               exclude_functions=true,
+pytest_mark2 = name=jira,
+               regex_match=[a-zA-Z]+-\d+,
+               allow_multiple_args=true,
+               exclude_functions=true
+pytest_mark3 = name=test_case_with_steps,
+               exclude_methods=true,
+               exclude_functions=true,
+               exclude_classes=false
+filename_check1 = filter_regex=test_.+,
+                  filename_regex=test_[\w-]+$
+    """
+    path = tmpdir_factory.mktemp('data').join('basic_config').strpath
+    with open(path, 'w') as f:
+        f.write(config)
+    return path
+
+
+@pytest.fixture()
+def original_behavior_config(tmpdir_factory):
+    config = """
+[flake8]
+ignore = E501
+pytest_mark1 = name=test_id,
+               value_match=uuid,
+               enforce_unique_value=true,
+               exclude_classes=true,
+pytest_mark2 = name=jira,
+               regex_match=[a-zA-Z]+-\d+,
+               allow_multiple_args=true,
+               exclude_classes=true
+filename_check1 = filter_regex=test_.+,
+                  filename_regex=test_[\w-]+$
+    """
+    path = tmpdir_factory.mktemp('data').join('basic_config').strpath
+    with open(path, 'w') as f:
+        f.write(config)
+    return path
+
+
 class OriginalAndExpected(object):
     """Contains the value before a test and the expectation"""
 
