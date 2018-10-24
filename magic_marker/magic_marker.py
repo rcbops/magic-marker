@@ -171,7 +171,7 @@ class MagicMarker(object):
         Returns:
             str : The new string updated with correct whitespace
         """
-        whitespace = re.match('(^\s*)', def_string).group(1)
+        whitespace = re.match(r'(^\s*)', def_string).group(1)
         if whitespace:
             target_line = whitespace + target_line
         return target_line

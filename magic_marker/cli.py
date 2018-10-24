@@ -25,7 +25,6 @@ def main(test_path, config):
     \b
     Required Arguments:
         test_path               the path to pass to flake8
-        pytest_mark_name        ensure this mark is present and marked with a UUID
     """
 
     try:

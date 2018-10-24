@@ -316,7 +316,7 @@ class TestBaz(object):
 
 @pytest.fixture()
 def stepped_class_config(tmpdir_factory):
-    config = """
+    config = r"""
 [flake8]
 ignore = E501
 pytest_mark1 = name=test_id,
@@ -342,7 +342,7 @@ filename_check1 = filter_regex=test_.+,
 
 @pytest.fixture()
 def original_behavior_config(tmpdir_factory):
-    config = """
+    config = r"""
 [flake8]
 ignore = E501
 pytest_mark1 = name=test_id,
