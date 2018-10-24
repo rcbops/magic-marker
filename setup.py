@@ -21,7 +21,7 @@ entry_points = {
 
 setup(
     name='magic-marker',
-    version='0.1.0',
+    version='1.0.0',
     author="rcbops",
     author_email='rpc-automation@rackspace.com',
     maintainer='rcbops',
