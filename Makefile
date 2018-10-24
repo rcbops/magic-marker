@@ -61,7 +61,7 @@ clean-venv: check-venv ## remove all packages from current virtual environment
 	@source virtualenvwrapper.sh && wipeenv || echo "Skipping wipe of environment"
 
 lint: ## check style with flake8
-	flake8 magic_marker setup.py tests
+	flake8 magic_marker setup.py tests --ignore=M
 
 test: ## run tests quickly with the default Python
 	py.test tests
