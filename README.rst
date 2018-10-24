@@ -7,7 +7,13 @@ magic-marker
         :target: https://travis-ci.org/rcbops/magic-marker
 
 
-Mark pytest test cases with UUIDs.
+The magic-marker tool will read off the flake8 config and fix any missing marks that it is able to fix.
+
+Fixable Marks
+-------------
+
+1. Marks that are configured to have value_match=uuid.  Magic Marker will read the configuration and generate the correct mark with a valid UUID as the argument.
+2. Marks that are configured to have name=test_case_with_steps.  Magic Marker will generate a mark named 'test_case_with_steps' with no arguments.
 
 Quick Start Guide
 -----------------

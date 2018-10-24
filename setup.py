@@ -11,7 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', 'flake8-pytest-mark<1.0.0', 'flake8', 'flake8-json', 'six']
+requirements = ['Click>=6.0', 'flake8-pytest-mark>=1.0.0,<2.0.0', 'flake8', 'flake8-json', 'six']
 packages = ['magic_marker']
 entry_points = {
     'console_scripts': [

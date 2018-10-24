@@ -6,7 +6,9 @@
 # ======================================================================================================================
 from __future__ import absolute_import
 from flake8.main.cli import main as flake8_main
+from flake8.main.application import Application
 from contextlib import contextmanager
+from magic_marker.fixable import Fixable
 import sys
 import six
 import json
@@ -22,37 +24,57 @@ import os
 
 class MagicMarker(object):
 
-    def __init__(self, mark):
+    def __init__(self):
         """Crate a new MagicMarker object
-
-        Args:
-            mark (str): The mark to create
         """
-        self._mark = mark
+        self.options = None
         dir_name = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10))
         self._backup_path = os.path.join(tempfile.gettempdir(), dir_name)
+        self._fixable = Fixable()
 
     @property
     def backup_path(self):
         return self._backup_path
 
-    def run_flake8_and_mark(self, path):
+    def find_options(self, config):
+        """Use flake8's library to find a valid config for flake8"""
+        flk8 = Application()
+        args = []
+        if config:
+            args.append("--config={}".format(config))
+        flk8.initialize(args)
+        opts = {}
+        for key, value in list(vars(flk8.options).items()):
+            if re.match(r'pytest_mark.*', key):
+                for option in value:
+                    try:
+                        opts[key]
+                    except KeyError:
+                        opts[key] = {}
+                    val = option.split('=')
+                    opts[key][val[0]] = val[1]
+        self.options = opts
+
+    def run_flake8_and_mark(self, path, config):
         """Run flak8 and edit and fix errors
 
         Args:
             path (str): The path to target for the fix
+            config (str): The path to a config to be passed to flake8
 
         Returns:
             str: the message stating what was performed
         """
 
+        self.find_options(config)
         args = [
             'flake8',
             path,
             "--format=json",
-            "--pytest-mark1=name={},value_match=uuid".format(self._mark),
-            "--select=M501"  # only covers case of no mark present
+            "--select=M5"  # only covers case of no mark present
         ]
+        if config:
+            args.append("--config={}".format(config))
 
         with self.patch_sys_argv(args), self.captured_stdout() as stdout:
             try:
@@ -93,13 +115,11 @@ class MagicMarker(object):
             if flake8_output[file_path]:
                 filname, fixcount = self._fix_file(flake8_output[file_path])
                 if fixcount == 1:
-                    message += "\n{} : {} test marked with UUID".format(filname, fixcount)
+                    message += "\n{} : {} test mark added".format(filname, fixcount)
                 else:
-                    message += "\n{} : {} tests marked with UUID".format(filname, fixcount)
+                    message += "\n{} : {} test marks added".format(filname, fixcount)
         if message:
             return message
-        else:
-            return "No changes made"
 
     def _fix_file(self, fixes_required):
         """Fixes an individual file
@@ -110,22 +130,27 @@ class MagicMarker(object):
         Returns:
             tuple(str, str):  filename and number of fixes performed
         """
+        fixes_performed = 0
         filename = str(fixes_required[0]['filename'])
         with open(filename, 'r') as f:
             data = f.readlines()
 
         fixes_required.sort(key=lambda x: x['line_number'])
+
         fixes_required.reverse()  # work from the bottom of the file up
         for fix in fixes_required:
-            fix_position = fix['line_number']
-            if fix_position:
-                fix_position += -1
-            mark = self._match_indent(data[fix_position], self._uuid_mark())
-            data.insert(fix_position, mark)
+            mark_name, prescribed_fix = self._fixable.check(fix, self.options)
+            if prescribed_fix:
+                fix_position = fix['line_number']
+                if fix_position:
+                    fix_position += -1
+                mark = self._match_indent(data[fix_position], prescribed_fix(mark_name))
+                data.insert(fix_position, mark)
+                fixes_performed += 1
 
         with open(filename, 'w') as f:
             f.writelines(data)
-        return filename, len(fixes_required)
+        return filename, fixes_performed
 
     def _uuid_mark(self):
         """generate a UUID mark string
@@ -146,7 +171,7 @@ class MagicMarker(object):
         Returns:
             str : The new string updated with correct whitespace
         """
-        whitespace = re.match('(^\s*)', def_string).group(1)
+        whitespace = re.match(r'(^\s*)', def_string).group(1)
         if whitespace:
             target_line = whitespace + target_line
         return target_line
